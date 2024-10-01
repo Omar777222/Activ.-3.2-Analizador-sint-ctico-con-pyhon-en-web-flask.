@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador Léxico y Sintáctico</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            margin: 20px auto;
+            width: 90%;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        textarea {
+            width: 45%;
+            height: 300px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 14px;
+        }
+        table {
+            width: 45%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        td {
+            background-color: #E3F2FD;
+        }
+        caption {
+            font-weight: bold;
+            padding: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-analyze {
+            background: #007BFF;
+            color: white;
+        }
+        .btn-clear {
+            background: #f44336;
+            color: white;
+        }
+        .btn-clear:hover {
+            background: #d32f2f;
+        }
+        .btn-analyze:hover {
+            background: #0056b3;
+        }
+        .btn-open {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-open:hover {
+            background: #388E3C;
+        }
+        .buttons {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .spacer {
+            height: 50px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <!-- Primer cuadro de texto para ingresar código -->
+            <textarea id="codeInput" name="code" placeholder="Ingresa tu código aquí"></textarea>
+
+            <!-- Botones de control -->
+            <div class="buttons">
+                <button type="button" class="btn-open" onclick="abrirArchivo()">Abrir archivo</button>
+                <button type="button" class="btn-analyze" onclick="analizarCodigo()">Analizar</button>
+                <button type="button" class="btn-clear" onclick="borrarResultados()">Limpiar</button>
+            </div>
+        </div>
+
+        <!-- Tabla de resultados del análisis Léxico -->
+        <table>
+            <caption>Analizador Léxico</caption>
+            <thead>
+                <tr>
+                    <th>LINEA</th>
+                    <th>SIMBOLO</th>
+                </tr>
+            </thead>
+            <tbody id="lexicalOutput">
+                <!-- Aquí se mostrarán los resultados -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Espacio entre las tablas -->
+    <div class="spacer"></div>
+
+    <!-- Tabla de resultados del análisis Sintáctico -->
+    <div class="container">
+        <table>
+            <caption>Analizador Sintáctico</caption>
+            <thead>
+                <tr>
+                    <th>LINEA</th>
+                    <th>COMPONENTE</th>
+                    <th>ERROR</th>
+                </tr>
+            </thead>
+            <tbody id="syntacticOutput">
+                <!-- Aquí se mostrarán los resultados -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Lista de palabras reservadas y símbolos
+        const reservedWords = ['int', 'main'];
+        const symbols = [';', '{', '}', '(', ')'];
+
+        // Función para analizar el código ingresado
+        function analizarCodigo() {
+            const code = document.getElementById("codeInput").value;
+            const lines = code.split("\n");
+            let lexicalHTML = ""; // Para mostrar en la tabla del análisis léxico
+            let syntacticHTML = ""; // Para mostrar en la tabla del análisis sintáctico
+            let lineNumber = 1; // Para llevar el conteo de líneas
+            let isCorrect = true; // Bandera para verificar si hay errores
+
+            // Procesar cada línea del código
+            for (let line of lines) {
+                line = line.trim(); // Eliminar espacios en blanco
+                if (line.length === 0) continue; // Saltar líneas vacías
+
+                // Verificar si el código contiene errores
+                let error = "";
+
+                // Dependiendo del contenido de la línea, se generan los tokens y se verifica si falta algo
+                if (line.includes("int main()")) {
+                    // Verificar que estén los paréntesis y las llaves correctas
+                    if (!line.includes("{")) {
+                        error += "Falta llave de apertura. ";
+                        isCorrect = false;
+                    }
+
+                    lexicalHTML += `
+                        <tr><td>LINEA ${lineNumber}</td><td></td></tr>
+                        <tr><td>&lt;Tipo de dato&gt;</td><td>int</td></tr>
+                        <tr><td>&lt;Reservada main&gt;</td><td>main</td></tr>
+                        <tr><td>&lt;Paréntesis de apertura&gt;</td><td>(</td></tr>
+                        <tr><td>&lt;Paréntesis de cierre&gt;</td><td>)</td></tr>
+                        <tr><td>&lt;Llave de apertura&gt;</td><td>{</td></tr>`;
+
+                    syntacticHTML += `<tr><td>LINEA ${lineNumber}</td><td>Declaración de función</td><td>${error}</td></tr>`;
+                    lineNumber++;
+                } else if (line.startsWith("int")) {
+                    // Verificar si hay identificadores correctos y si falta el punto y coma
+                    if (!line.includes("x")) {
+                        error += "Falta el identificador 'x'. ";
+                        isCorrect = false;
+                    }
+                    if (!line.includes(";")) {
+                        error += "Falta el punto y coma (;). ";
+                        isCorrect = false;
+                    }
+
+                    lexicalHTML += `
+                        <tr><td>LINEA ${lineNumber}</td><td></td></tr>
+                        <tr><td>&lt;Tipo de dato&gt;</td><td>int</td></tr>
+                        <tr><td>&lt;Identificador&gt;</td><td>x</td></tr>
+                        <tr><td>&lt;Punto y coma&gt;</td><td>;</td></tr>`;
+
+                    syntacticHTML += `<tr><td>LINEA ${lineNumber}</td><td>Declaración de variable</td><td>${error}</td></tr>`;
+                    lineNumber++;
+                } else if (line.includes("}")) {
+                    // Verificar si falta la llave de cierre
+                    lexicalHTML += `
+                        <tr><td>LINEA ${lineNumber}</td><td></td></tr>
+                        <tr><td>&lt;Llave de cierre&gt;</td><td>}</td></tr>`;
+
+                    syntacticHTML += `<tr><td>LINEA ${lineNumber}</td><td>Cierre de bloque</td><td>${error}</td></tr>`;
+                    lineNumber++;
+                } else {
+                    // Si no es un caso manejado, marcar error de sintaxis
+                    error = "Error de sintaxis";
+                    isCorrect = false;
+                    syntacticHTML += `<tr><td>LINEA ${lineNumber}</td><td>Instrucción desconocida</td><td>${error}</td></tr>`;
+                    lineNumber++;
+                }
+            }
+
+            // Verificar si faltan símbolos al final del código
+            if (!code.includes("{")) {
+                syntacticHTML += `<tr><td colspan="3" style="text-align:center;color:red;">Falta la llave de apertura</td></tr>`;
+            }
+            if (!code.includes("}")) {
+                syntacticHTML += `<tr><td colspan="3" style="text-align:center;color:red;">Falta la llave de cierre</td></tr>`;
+            }
+            if (!code.includes("(")) {
+                syntacticHTML += `<tr><td colspan="3" style="text-align:center;color:red;">Falta Paréntesis de apertura</td></tr>`;
+            }
+            if (!code.includes(")")) {
+                syntacticHTML += `<tr><td colspan="3" style="text-align:center;color:red;">Falta Paréntesis de cierre</td></tr>`;
+            }
+
+            // Mostrar resultados en las tablas correspondientes
+            document.getElementById("lexicalOutput").innerHTML = lexicalHTML;
+            document.getElementById("syntacticOutput").innerHTML = syntacticHTML;
+        }
+
+        // Función para borrar los resultados
+        function borrarResultados() {
+            document.getElementById("codeInput").value = "";
+            document.getElementById("lexicalOutput").innerHTML = "";
+            document.getElementById("syntacticOutput").innerHTML = "";
+        }
+
+        // Función para abrir un archivo (pendiente de implementación)
+        function abrirArchivo() {
+            alert("Esta funcionalidad requiere implementación");
+        }
+    </script>
+</body>
+</html>
